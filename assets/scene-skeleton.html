@@ -1,0 +1,57 @@
+<template>
+  <style>
+    @font-face {
+      font-family: NotoSC;
+      src: url("assets/fonts/NotoSansSC-VF.ttf") format("truetype");
+      font-weight: 100 900;
+    }
+
+    #{{SCENE_ID}}-root {
+      width: 1920px;
+      height: 1080px;
+      position: relative;
+      overflow: hidden;
+      background: #f4ead8;
+      color: #17212b;
+      font-family: NotoSC, sans-serif;
+    }
+
+    #{{SCENE_ID}}-root .clip {
+      position: absolute;
+      box-sizing: border-box;
+    }
+
+    #{{SCENE_ID}}-root .subtitle-safe {
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 170px;
+      pointer-events: none;
+    }
+  </style>
+
+  <div
+    id="{{SCENE_ID}}-root"
+    data-composition-id="{{SCENE_ID}}"
+    data-duration="{{DURATION}}"
+    data-width="1920"
+    data-height="1080"
+  >
+    <div class="clip stage" data-start="0" data-duration="{{DURATION}}" data-track-index="0"></div>
+    <div class="subtitle-safe" aria-hidden="true"></div>
+  </div>
+
+  <script>
+    (() => {
+      const timeline = gsap.timeline({ paused: true });
+      timeline.fromTo(
+        "#{{SCENE_ID}}-root .stage",
+        { opacity: 0 },
+        { opacity: 1, duration: 0.45, ease: "power2.out" },
+        0
+      );
+      window.__timelines = window.__timelines || {};
+      window.__timelines["{{SCENE_ID}}"] = timeline;
+    })();
+  </script>
+</template>

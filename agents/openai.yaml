@@ -1,4 +1,4 @@
 interface:
-  display_name: "Story to Video"
-  short_description: "根据故事文案和参考图自动生产完整视频与发布素材包"
-  default_prompt: "使用 $story-to-video 根据这篇故事文案和本次参考图生成完整视频、双封面和发布文案。"
+  display_name: "豆包旁白漫画视频工厂"
+  short_description: "把旁白文章自动制作成以固定豆包形象演绎的完整漫画视频"
+  default_prompt: "使用 $narration-to-comic-video 以固定豆包母图为主角，把这篇旁白制作成完整漫画视频。"
