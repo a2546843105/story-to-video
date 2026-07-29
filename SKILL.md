@@ -32,8 +32,13 @@ Default to:
 - high-end editorial comic collage, unless a reference image defines another style.
 - the bundled `assets/characters/doubao-mother.png` as Doubao's permanent identity anchor.
 
-Ask only for missing material that blocks production, such as an unavailable voice credential. Do not repeatedly reconfirm ordinary implementation choices.
+Treat voice access as a hard preflight item. If the selected voice service needs an API credential and the user has not supplied one or confirmed where it is available, ask before generating audio, images, scenes, or delegating work. Ask for the voice provider, credential availability, voice ID, model, and target loudness together in one compact question. Do not begin with placeholder audio and retrofit timing later.
+
+Never store, print, repeat, or commit a credential value. Use it ephemerally or through a user-approved environment variable, and record only the provider, credential availability, and non-secret voice settings in project state.
+
+Ask only for missing material that blocks production. Accept supplied values without reconfirming them, use the defaults above for ordinary implementation choices, and do not repeatedly interrupt the user.
 Do not replace Doubao with a newly invented design unless the user explicitly requests a new series character.
+Produce one complete version by default. Do not create a separate short version unless the user explicitly asks for one.
 
 ## Delivery contract
 
@@ -73,6 +78,24 @@ Create scene boilerplate with `scripts/new_scene.ps1` instead of rewriting regis
 
 ## Production gates
 
+### 0. Pass preflight before production
+
+Before any production work, write the non-secret input decisions to `制作过程/planning/project-state.json`:
+
+- narration received and output path confirmed;
+- voice provider, voice ID, and model;
+- whether an API credential is required and available;
+- target loudness, aspect ratio, resolution, and frame rate;
+- style reference and Doubao mother-image choice.
+
+Set `preflight.status` to `approved` only when every blocking input is available. Run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/preflight_guard.ps1 -ProjectRoot "ABSOLUTE_PROJECT_PATH"
+```
+
+If it fails, ask for the missing blocking value and pause production. Read-only inspection and planning are allowed; TTS, image generation, scene authoring, rendering, and worker delegation are not.
+
 ### 1. Build the audio timeline
 
 Generate narration audio, normalize to the requested loudness, transcribe with timestamps, and create a scene manifest. For a 7–8 minute narration, target roughly 35–50 scenes and 8–14 seconds per scene, adjusted to meaning rather than evenly divided.
@@ -93,21 +116,31 @@ Copy the bundled Doubao mother image into `制作过程/assets/characters/doubao
 
 Create one style anchor for the whole video. Other story characters may be generated freely in the same rendering style; their exact identity does not need to persist across different videos. If a supporting character reappears within the current story, reuse its last correct image as reference.
 
-Generate asset sheets with two or three large, separated items per image. Add a clean white or dark outline and enough empty space for reliable cropping. Inspect every crop for stray hands, limbs, backgrounds, or overlaps.
+Before scene production, lock shared layout tokens for the chosen canvas. At 1920×1080, use these defaults unless a representative scene proves a deliberate exception:
+
+- main character visible height: about 45–55% of the frame;
+- supporting character visible height: about 38–50%;
+- clear gap between separate character zones: at least 40 px;
+- narration subtitle reserve: bottom 170 px;
+- no face, hand, character silhouette, speech bubble, or key text overlap.
+
+Generate asset sheets with two or three large, separated items per image and enough empty space for reliable cropping. For transparent character cutouts, create a 2 px sacrificial white rim, trim inward by 1 px, and preserve about 1 px of clean white edge. Inspect every crop on transparent, light, and dark backgrounds for stray hands, limbs, leaked backgrounds, overlaps, and red or magenta fringe.
 
 ### 3. Pass the three-scene gate
 
 Before batch production, complete only:
 
 - the opening;
-- the densest middle scene;
-- the ending climax.
+- the densest multi-character middle scene;
+- the riskiest UI-overlay or ending-climax scene.
 
-Create one contact sheet and inspect character consistency, crop edges, bubble direction, face occlusion, subtitle clearance, information density, and visual quality. If any representative scene fails, fix the system or template before producing the remaining scenes.
+The representative set must collectively cover a single-character composition, a multi-character composition, and a character-plus-UI/card overlay. If those risks are not covered by three scenes, add one representative scene before batch production.
+
+Create one contact sheet and inspect character consistency, character scale, 40 px separation, crop edges on light and dark backgrounds, red/magenta fringe, bubble direction, face occlusion, subtitle clearance, information density, and visual quality. If any representative scene fails, fix the shared asset process, layout tokens, or template before producing the remaining scenes. Set `representativeScenesApproved` only after this gate passes.
 
 ### 4. Produce scene ranges in parallel
 
-After the three-scene gate passes, split the remaining scenes into consecutive ranges. Give each worker the same style anchor, character whitelist, timing manifest, subtitle-safe area, and file ownership rules. Each worker must create its own assets, scenes, snapshots, and contact sheet for its range.
+Delegate only after preflight, audio timing, style anchor, character whitelist, shared layout tokens, cutout-edge inspection, and the representative-scene gate all pass. Then split the remaining scenes into consecutive ranges. Give each worker the same approved assets, style anchor, character whitelist, timing manifest, layout tokens, subtitle-safe area, and file ownership rules. Each worker must create its own assets, scenes, snapshots, and contact sheet for its range.
 
 Do not split by separate functions such as “one person draws everything” and “another person animates everything”; that creates handoff queues. Split by consecutive scene ranges so each worker finishes a complete slice.
 
@@ -115,13 +148,14 @@ Do not split by separate functions such as “one person draws everything” and
 
 Run, in order:
 
-1. segment contact-sheet self-check;
-2. main-agent review of all segment contact sheets;
-3. `scripts/visual_gate.ps1`;
-4. HyperFrames lint and check;
-5. three snapshots from the final scene through the full composition entry;
-6. low-bitrate draft viewing;
-7. final render and delivery verification.
+1. representative-scene edge, scale, separation, and overlay inspection;
+2. segment contact-sheet self-check;
+3. main-agent review of all segment contact sheets;
+4. `scripts/visual_gate.ps1`;
+5. HyperFrames lint and check;
+6. three snapshots from the final scene through the full composition entry;
+7. low-bitrate draft viewing;
+8. final render, representative frame extraction, full decode, and delivery verification.
 
 Never treat a programmatic pass as proof that the image is visually correct.
 
