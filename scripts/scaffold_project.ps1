@@ -42,6 +42,21 @@ $statePath = Join-Path $workRoot 'planning\project-state.json'
 if (-not (Test-Path -LiteralPath $statePath)) {
   $state = [ordered]@{
     stage = 'initialized'
+    preflight = [ordered]@{
+      status = 'pending'
+      narrationReceived = [bool]$ScriptPath
+      outputPathConfirmed = $true
+      voiceProvider = $null
+      apiCredentialRequired = $null
+      apiCredentialAvailable = $null
+      voiceId = $null
+      voiceModel = $null
+      targetLufs = -20
+      aspectRatio = '16:9'
+      resolution = '1920x1080'
+      fps = 30
+      styleReference = 'assets/characters/doubao-mother.png'
+    }
     representativeScenesApproved = $false
     characterWhitelist = 'planning/character-whitelist.txt'
     lastCheck = $null
